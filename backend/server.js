@@ -22,7 +22,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS setup: allow frontend origin(s)
+// CORS setup
 const allowedOrigins = [
   'http://localhost:5173', // local frontend dev
   'https://portfolio-five-puce-yxtdvaov5z.vercel.app' // deployed frontend
@@ -30,16 +30,19 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin like mobile apps or curl
+    // allow requests with no origin (e.g., curl, Postman, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
-      return callback(new Error(msg), false);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`Blocked CORS request from origin: ${origin}`);
+      callback(null, false); // do not throw error
     }
-    return callback(null, true);
   },
   credentials: true
 }));
+
 
 // API Routes
 app.use('/api/auth', authRoutes);

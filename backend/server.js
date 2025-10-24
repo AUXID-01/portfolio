@@ -22,14 +22,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS setup: allow frontend origin
+// CORS setup: allow frontend origin(s)
 const allowedOrigins = [
-  'http://localhost:5173',           // local dev frontend
-  'https://your-frontend-domain.com' // deployed frontend
+  'http://localhost:5173', // local frontend dev
+  'https://portfolio-five-puce-yxtdvaov5z.vercel.app' // deployed frontend
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function(origin, callback) {
+    // allow requests with no origin like mobile apps or curl
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 
@@ -53,8 +61,6 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get(/^\/.*$/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-
-
 
 // Error handling middleware
 app.use(errorMiddleware);
